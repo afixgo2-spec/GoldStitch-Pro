@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>গোল্ডস্টিচ প্রো | পেশাদার দর্জি ব্যবস্থাপনা</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0A0A0C; font-family: 'Hind Siliguri', sans-serif; color: #EDEDED; padding-bottom: 70px; }
+        .top-bar { background: #0D0D10; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #D4AF37; position: sticky; top: 0; z-index: 99; }
+        .top-bar h2 { font-size: 1.2rem; color: #D4AF37; }
+        .top-icon { background: none; border: none; color: #D4AF37; font-size: 20px; margin-left: 15px; cursor: pointer; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #111115; display: flex; justify-content: space-around; padding: 10px 12px; border-top: 1px solid #D4AF37; z-index: 100; }
+        .nav-item { text-align: center; color: #888; cursor: pointer; font-size: 11px; }
+        .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
+        .nav-item.active { color: #D4AF37; }
+        .page { display: none; padding: 20px 16px 80px 16px; max-width: 1400px; margin: 0 auto; }
+        .page.active { display: block; }
+        .card { background: #121216; border-radius: 28px; padding: 20px; margin-bottom: 20px; border: 1px solid #25252A; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 25px; }
+        .stat-card { background: linear-gradient(145deg, #18181D, #0E0E12); padding: 20px 12px; border-radius: 28px; text-align: center; border-bottom: 3px solid #D4AF37; }
+        .stat-number { font-size: 32px; font-weight: 800; color: #D4AF37; }
+        button, .btn { background: #D4AF37; border: none; padding: 10px 18px; border-radius: 40px; font-weight: 600; color: #121212; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-outline { background: transparent; border: 1px solid #D4AF37; color: #D4AF37; }
+        input, select, textarea { background: #1E1E26; border: 1px solid #2E2E36; padding: 12px 16px; border-radius: 20px; color: white; width: 100%; margin-bottom: 12px; }
+        
+        /* অর্ডার লিস্ট কার্ড স্টাইল */
+        .order-list-item { background: #141418; border-radius: 20px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #D4AF37; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; cursor: pointer; transition: 0.2s; }
+        .order-list-item:hover { background: #1A1A20; }
+        .order-basic-info { display: flex; flex-direction: column; gap: 4px; }
+        .order-id { font-weight: 800; color: #D4AF37; font-size: 1.1rem; }
+        .order-customer { font-weight: 600; }
+        .order-phone { font-size: 0.75rem; color: #aaa; }
+        .order-stats { text-align: right; }
+        .due-amount { color: #FF9800; font-weight: 700; }
+        .delivery-date { font-size: 0.7rem; color: #888; }
+        
+        /* মডাল জুম */
+        .zoom-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 300; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .zoom-modal.active { display: flex; }
+        .zoom-img { max-width: 90%; max-height: 80%; object-fit: contain; touch-action: pinch-zoom; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 200; overflow-y: auto; display: none; padding: 20px; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: #141418; border-radius: 32px; padding: 24px; max-width: 550px; width: 100%; border: 1px solid #D4AF37; max-height: 90vh; overflow-y: auto; }
+        .image-gallery { display: flex; flex-direction: column; gap: 15px; max-height: 400px; overflow-y: auto; }
+        .gallery-item { background: #1E1E26; border-radius: 20px; padding: 12px; }
+        .gallery-img { width: 100%; border-radius: 16px; cursor: pointer; }
+        .img-caption { margin-top: 8px; font-size: 0.85rem; color: #D4AF37; }
+        @media (max-width: 680px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .order-list-item { flex-direction: column; align-items: flex-start; gap: 10px; } .order-stats { text-align: left; } }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <h2><i class="fas fa-scroll"></i> GoldStitch Pro</h2>
+    <div><i class="fas fa-database top-icon" id="backupTopBtn"></i><i class="fas fa-sync-alt top-icon" id="refreshTopBtn"></i></div>
+</div>
+<div class="bottom-nav">
+    <div class="nav-item" data-page="dashboard"><i class="fas fa-tachometer-alt"></i><span>ড্যাশ</span></div>
+    <div class="nav-item" data-page="orders"><i class="fas fa-clipboard-list"></i><span>অর্ডার</span></div>
+    <div class="nav-item" data-page="tailors"><i class="fas fa-user-cog"></i><span>দর্জি</span></div>
+    <div class="nav-item" data-page="expense"><i class="fas fa-wallet"></i><span>খরচ</span></div>
+    <div class="nav-item" data-page="reports"><i class="fas fa-chart-line"></i><span>রিপোর্ট</span></div>
+    <div class="nav-item" data-page="settings"><i class="fas fa-cog"></i><span>সেটিংস</span></div>
+</div>
+
+<div id="page-dashboard" class="page active"><div class="stats-grid" id="dashStats"></div><div class="card"><canvas id="revenueChart" height="180"></canvas></div><div class="card"><h3>📊 কাজের স্টক ও ডেলিভারি সাজেশন</h3><div id="stockSuggestion"></div><button id="quickOrderBtn"><i class="fas fa-plus"></i> নতুন অর্ডার</button></div></div>
+<div id="page-orders" class="page"><h2>📋 অর্ডার লিস্ট</h2><button id="newOrderBtn" style="margin-bottom: 15px;"><i class="fas fa-plus"></i> নতুন অর্ডার</button><div id="ordersContainer"></div></div>
+<div id="page-tailors" class="page"><h2>👨‍🔧 দর্জি</h2><button id="addTailorBtn">+ নতুন দর্জি</button><div id="tailorsList" class="stats-grid"></div></div>
+<div id="page-expense" class="page"><h2>💸 খরচ</h2><button id="addExpenseBtn">+ নতুন খরচ</button><div class="card"><table id="expenseTable"><thead><tr><th>তারিখ</th><th>বিবরণ</th><th>টাকা</th><th></th></tr></thead><tbody></tbody></table><h4>মোট খরচ: <span id="totalExpense">0</span> টাকা</h4></div></div>
+<div id="page-reports" class="page"><h2>📊 রিপোর্ট</h2><div class="stats-grid"><button id="exportOrdersBtn" class="btn-outline"><i class="fas fa-download"></i> অর্ডার JSON</button><button id="backupBtn"><i class="fas fa-database"></i> ব্যাকআপ</button><button id="restoreBtn"><i class="fas fa-upload"></i> রিস্টোর</button><button id="clearAllBtn" style="background:#a00; color:white;">রিসেট</button></div><div id="backupStatus" class="card"></div></div>
+<div id="page-settings" class="page"><h2>⚙️ সেটিংস</h2><div class="card"><input type="text" id="shopName" placeholder="দোকানের নাম"><input type="text" id="ownerName" placeholder="মালিক"><input type="text" id="shopPhone" placeholder="মোবাইল"><textarea id="shopAddress" placeholder="ঠিকানা"></textarea><label>📦 আগের কত দিনের কাজ স্টক আছে?</label><input type="number" id="stockDaysPrior" placeholder="যেমন ৩ দিন" value="0"><label>⏱️ দৈনিক কাজের ক্যাপাসিটি (ঘণ্টা)</label><input type="number" id="dailyCapacity" placeholder="যেমন ৮" value="8"><button id="saveSettingsBtn">সেভ</button></div></div>
+
+<!-- অর্ডার মডাল -->
+<div id="orderModal" class="modal"><div class="modal-content"><span style="float:right; cursor:pointer;" id="closeOrderModal">&times;</span><h3>🛍️ নতুন অর্ডার</h3><div id="orderFormHtml"></div>
+<div><label>⏱️ কাজের সময় (ঘণ্টা)</label><input type="number" id="workHours" placeholder="কত ঘণ্টা লাগবে?" value="4"></div>
+<div><label>📅 ডেলিভারি তারিখ</label><input type="date" id="deliveryDateManual"></div>
+<div><label>🖼️ ছবি যোগ করুন</label><input type="file" id="imageUpload" accept="image/*" multiple><div id="imageListContainer"></div></div>
+<button id="modalSaveOrder" class="btn"><i class="fas fa-save"></i> অর্ডার কনফার্ম</button></div></div>
+
+<!-- অর্ডার ডিটেইল ভিউ মডাল -->
+<div id="orderDetailModal" class="modal"><div class="modal-content" style="max-width: 600px;"><span style="float:right; cursor:pointer;" class="closeDetailModal">&times;</span><h3 id="detailTitle"></h3><div id="orderDetailContent"></div></div></div>
+
+<!-- জুম মডাল -->
+<div id="zoomModal" class="zoom-modal"><img id="zoomImage" class="zoom-img"><button onclick="closeZoom()" style="margin-top:20px; background:#D4AF37;">বন্ধ করুন</button></div>
+
+<div id="tailorModal" class="modal"><div class="modal-content"><span style="float:right; cursor:pointer;" class="closeModalBtn">&times;</span><h3>দর্জি যোগ</h3><input type="text" id="tailorName" placeholder="নাম"><input type="text" id="tailorPhone" placeholder="মোবাইল"><input type="text" id="tailorSalary" placeholder="বেতন"><button id="saveTailorBtn">সেভ</button></div></div>
+<div id="expenseModal" class="modal"><div class="modal-content"><span style="float:right; cursor:pointer;" class="closeModalBtn">&times;</span><h3>নতুন খরচ</h3><input type="text" id="expenseDesc" placeholder="বিবরণ"><input type="number" id="expenseAmount" placeholder="টাকা"><input type="date" id="expenseDate"><button id="saveExpenseBtn">যোগ করুন</button></div></div>
+
+<script>
+    let db = {
+        orders: JSON.parse(localStorage.getItem('gold_orders')) || [],
+        tailors: JSON.parse(localStorage.getItem('gold_tailors')) || [],
+        expenses: JSON.parse(localStorage.getItem('gold_expenses')) || [],
+        settings: JSON.parse(localStorage.getItem('gold_settings')) || { dailyCapacity: 8, stockDaysPrior: 0 },
+        nextOrderId: parseInt(localStorage.getItem('gold_nextOrderId')) || 1
+    };
+    let currentEditingOrder = null;
+    let tempImages = [];
+
+    function saveAll() { localStorage.setItem('gold_orders', JSON.stringify(db.orders)); localStorage.setItem('gold_tailors', JSON.stringify(db.tailors)); localStorage.setItem('gold_expenses', JSON.stringify(db.expenses)); localStorage.setItem('gold_settings', JSON.stringify(db.settings)); localStorage.setItem('gold_nextOrderId', db.nextOrderId); }
+    function getNewOrderId() { return db.nextOrderId++; }
+
+    function calculateSuggestions() {
+        let dailyCap = db.settings.dailyCapacity || 8;
+        let stockPrior = db.settings.stockDaysPrior || 0;
+        let pendingOrders = db.orders.filter(o => o.status !== 'delivered');
+        let totalPendingHours = pendingOrders.reduce((sum, o) => sum + (o.workHours || 4), 0);
+        let daysNeeded = Math.ceil(totalPendingHours / dailyCap);
+        let totalDays = daysNeeded + stockPrior;
+        let suggestDate = new Date();
+        suggestDate.setDate(suggestDate.getDate() + totalDays + 1);
+        return { totalPendingHours, daysNeeded, stockPrior, totalDays, suggestDate: suggestDate.toISOString().slice(0,10) };
+    }
+
+    function updateDashboardAndSuggestion() {
+        let totalOrders = db.orders.length;
+        let pending = db.orders.filter(o=>o.status!=='delivered').length;
+        let delivered = db.orders.filter(o=>o.status==='delivered').length;
+        let totalRevenue = db.orders.reduce((s,o)=>s+o.paid,0);
+        let totalDue = db.orders.reduce((s,o)=>s+(o.due||0),0);
+        let totalExp = db.expenses.reduce((s,e)=>s+e.amount,0);
+        document.getElementById('dashStats').innerHTML = `<div class="stat-card"><div class="stat-number">${totalOrders}</div><div>মোট</div></div><div class="stat-card"><div class="stat-number">${pending}</div><div>পেন্ডিং</div></div><div class="stat-card"><div class="stat-number">${delivered}</div><div>ডেলিভারি</div></div><div class="stat-card"><div class="stat-number">${totalRevenue}৳</div><div>আয়</div></div><div class="stat-card"><div class="stat-number">${totalDue}৳</div><div>বাকি</div></div><div class="stat-card"><div class="stat-number">${totalExp}৳</div><div>খরচ</div></div>`;
+        let sug = calculateSuggestions();
+        document.getElementById('stockSuggestion').innerHTML = `<div class="stats-grid"><div class="stat-card"><div class="stat-number">${sug.totalDays}</div><div>দিনের কাজ জমা</div></div><div class="stat-card"><div class="stat-number">${sug.totalPendingHours} ঘণ্টা</div><div>পেন্ডিং কাজ</div></div><div class="stat-card"><div class="stat-number">${sug.suggestDate}</div><div>পরবর্তী ডেলিভারি সম্ভব</div></div></div>`;
+        if(window.revenueChart) window.revenueChart.destroy();
+        let ctx = document.getElementById('revenueChart').getContext('2d');
+        window.revenueChart = new Chart(ctx, { type:'line', data:{ labels:['সপ্তাহ ১','২','৩','৪'], datasets:[{ label:'আয়', data:[totalRevenue*0.2, totalRevenue*0.3, totalRevenue*0.25, totalRevenue*0.25], borderColor:'#D4AF37' }] } });
+    }
+
+    function renderOrdersList() {
+        let container = document.getElementById('ordersContainer');
+        if(db.orders.length === 0) { container.innerHTML = '<div class="card">কোনো অর্ডার নেই</div>'; return; }
+        container.innerHTML = db.orders.map(o => `
+            <div class="order-list-item" onclick="showOrderDetail(${o.id})">
+                <div class="order-basic-info">
+                    <div class="order-id">#${o.orderId}</div>
+                    <div class="order-customer">${o.customer}</div>
+                    <div class="order-phone">📞 ${o.phone || 'নেই'}</div>
+                </div>
+                <div class="order-stats">
+                    <div>📅 অর্ডার: ${o.orderDate || o.date?.slice(0,10)}</div>
+                    <div>🚚 ডেল: ${o.deliveryDate || 'সেট করুন'}</div>
+                    <div class="due-amount">বাকি: ${o.due}৳</div>
+                    <select class="status-select" data-id="${o.id}" onclick="event.stopPropagation()" onchange="updateStatusFromSelect(${o.id}, this.value)">
+                        <option ${o.status==='pending'?'selected':''}>pending</option>
+                        <option ${o.status==='cut'?'selected':''}>cut</option>
+                        <option ${o.status==='sewing'?'selected':''}>sewing</option>
+                        <option ${o.status==='stitch'?'selected':''}>stitch</option>
+                        <option ${o.status==='complete'?'selected':''}>complete</option>
+                        <option ${o.status==='delivered'?'selected':''}>delivered</option>
+                    </select>
+                    <button onclick="event.stopPropagation();markDelivered(${o.id})" style="margin-top:5px; background:#4CAF50; color:white; padding:4px 12px;">✅ ডেলিভারি দিয়েছেন</button>
+                </div>
+            </div>
+        `).join('');
+    }
+    window.updateStatusFromSelect = (id, status) => { let o=db.orders.find(o=>o.id===id); if(o){o.status=status; saveAll(); renderOrdersList(); updateDashboardAndSuggestion();} };
+    window.markDelivered = (id) => { let o=db.orders.find(o=>o.id===id); if(o){o.status='delivered'; saveAll(); renderOrdersList(); updateDashboardAndSuggestion(); alert(`${o.customer} এর অর্ডার ডেলিভারি করা হয়েছে`);} };
+    window.showOrderDetail = (id) => {
+        let o = db.orders.find(o=>o.id===id);
+        if(!o) return;
+        let measHtml = Object.entries(o.measurements||{}).map(([k,v])=>`<p><strong>${k}:</strong> ${v}</p>`).join('');
+        let imagesHtml = `<div class="image-gallery">` + (o.images||[]).map((img,idx)=>`<div class="gallery-item"><img src="${img.dataURL}" class="gallery-img" onclick="openZoomImage('${img.dataURL}')"><div class="img-caption"><i class="fas fa-comment"></i> ${img.label || 'কোনো বিবরণ নেই'}</div></div>`).join('') + `</div>`;
+        document.getElementById('detailTitle').innerHTML = `📋 ${o.customer} (আইডি: #${o.orderId})`;
+        document.getElementById('orderDetailContent').innerHTML = `<div><p><strong>📞 ফোন:</strong> ${o.phone}</p><p><strong>👕 পোশাক:</strong> ${o.cloth}</p><p><strong>💰 মোট: ${o.total}৳ | জমা: ${o.paid}৳ | বাকি: ${o.due}৳</strong></p><p><strong>⏱️ কাজের সময়:</strong> ${o.workHours} ঘণ্টা</p><p><strong>📅 অর্ডার তারিখ:</strong> ${o.orderDate || o.date?.slice(0,10)}</p><p><strong>🚚 ডেলিভারি তারিখ:</strong> ${o.deliveryDate || 'সেট করা হয়নি'}</p><p><strong>📌 স্ট্যাটাস:</strong> ${o.status}</p><h4 style="margin-top:15px;">📏 মাপ:</h4>${measHtml}<h4>🖼️ ছবি (${(o.images||[]).length}টি)</h4>${imagesHtml}</div>`;
+        document.getElementById('orderDetailModal').classList.add('active');
+    };
+    window.openZoomImage = (src) => { document.getElementById('zoomImage').src = src; document.getElementById('zoomModal').classList.add('active'); };
+    window.closeZoom = () => { document.getElementById('zoomModal').classList.remove('active'); };
+    function renderTailors() { document.getElementById('tailorsList').innerHTML = db.tailors.map(t=>`<div class="stat-card"><h3>${t.name}</h3><p>📞 ${t.phone}</p><p>💰 ${t.salary}৳</p><button onclick="deleteTailor(${t.id})">🗑️</button></div>`).join(''); }
+    function renderExpenses() { let tbody = document.querySelector('#expenseTable tbody'); if(tbody) tbody.innerHTML = db.expenses.map(e=>`<tr><td>${e.date}</td><td>${e.desc}</td><td>${e.amount}৳</td><td><button onclick="deleteExpense(${e.id})">🗑️</button></td></tr>`).join(''); updateDashboardAndSuggestion(); }
+    window.deleteTailor = (id) => { db.tailors=db.tailors.filter(t=>t.id!==id); saveAll(); renderTailors(); };
+    window.deleteExpense = (id) => { db.expenses=db.expenses.filter(e=>e.id!==id); saveAll(); renderExpenses(); updateDashboardAndSuggestion(); };
+    function updateImageListUI() {
+        let container = document.getElementById('imageListContainer');
+        container.innerHTML = tempImages.map((img, idx) => `<div class="image-item" style="background:#1E1E26; border-radius:16px; padding:12px; margin-bottom:12px;"><img src="${img.dataURL}" style="width:100%; max-height:150px; object-fit:cover; border-radius:16px;"><textarea class="img-label-input" data-idx="${idx}" placeholder="ছবির বিবরণ..." rows="2">${img.label || ''}</textarea><button onclick="removeTempImage(${idx})" style="background:#a00; margin-top:5px;">মুছুন</button></div>`).join('');
+        document.querySelectorAll('.img-label-input').forEach(inp => { inp.addEventListener('change', (e) => { let idx = parseInt(inp.dataset.idx); if(!isNaN(idx)) tempImages[idx].label = inp.value; }); });
+    }
+    window.removeTempImage = (idx) => { tempImages.splice(idx,1); updateImageListUI(); };
+    function openOrderForm(editing=null) {
+        currentEditingOrder = editing; tempImages = editing?.images ? editing.images.map(img=>({...img})) : [];
+        let html = `<input type="text" id="ordCustomer" placeholder="গ্রাহকের নাম" value="${editing?editing.customer:''}"><input type="text" id="ordPhone" placeholder="মোবাইল" value="${editing?editing.phone:''}"><select id="ordCloth"><option>শার্ট</option><option>পাঞ্জাবি</option><option>বোরকা</option><option>থ্রি-পিস</option></select>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><input type="number" id="ordFabric" placeholder="কাপড়ের দাম" value="${editing?editing.fabric:''}"><input type="number" id="ordWage" placeholder="মজুরি" value="${editing?editing.wage:''}"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><input type="number" id="ordAdvance" placeholder="জমা" value="${editing?editing.paid:''}"><input type="number" id="ordTotal" placeholder="মোট" readonly value="${editing?editing.total:''}"></div>
+        <div id="measFields"></div>`;
+        document.getElementById('orderFormHtml').innerHTML = html;
+        function calcTotal() { let fabric=+document.getElementById('ordFabric').value||0, wage=+document.getElementById('ordWage').value||0; document.getElementById('ordTotal').value=fabric+wage; }
+        document.getElementById('ordFabric').addEventListener('input',calcTotal);
+        document.getElementById('ordWage').addEventListener('input',calcTotal);
+        calcTotal();
+        function loadMeasFields(type){
+            let map={'শার্ট':['বুক','দৈর্ঘ্য','কাঁধ','হাতা'],'পাঞ্জাবি':['বুক','দৈর্ঘ্য','কাঁধ','হাতা','গলা'],'বোরকা':['লম্বা','হাতা','বুক','মুখ'],'থ্রি-পিস':['টপ','বটম','বুক','কোমর']};
+            let fields=map[type]||map['শার্ট'];
+            document.getElementById('measFields').innerHTML=fields.map(f=>`<input type="text" placeholder="${f} (সেমি)" class="measInput" data-field="${f}" value="${editing?.measurements?.[f]||''}">`).join('');
+        }
+        document.getElementById('ordCloth').addEventListener('change',e=>loadMeasFields(e.target.value));
+        loadMeasFields(document.getElementById('ordCloth').value);
+        document.getElementById('workHours').value = editing?.workHours || 4;
+        document.getElementById('deliveryDateManual').value = editing?.deliveryDate || '';
+        document.getElementById('imageUpload').onchange = (e) => { let files = Array.from(e.target.files); files.forEach(file => { let reader = new FileReader(); reader.onload = ev => { tempImages.push({ dataURL: ev.target.result, label: '' }); updateImageListUI(); }; reader.readAsDataURL(file); }); };
+        updateImageListUI();
+        document.getElementById('orderModal').classList.add('active');
+    }
+    document.getElementById('modalSaveOrder').onclick = ()=>{
+        let customer = document.getElementById('ordCustomer').value;
+        if(!customer) return alert('গ্রাহকের নাম দিন');
+        let measurements = {}; document.querySelectorAll('.measInput').forEach(inp=> measurements[inp.getAttribute('data-field')]=inp.value);
+        let fabric=+document.getElementById('ordFabric').value||0, wage=+document.getElementById('ordWage').value||0, total=fabric+wage, advance=+document.getElementById('ordAdvance').value||0, due=total-advance;
+        let workHours = +document.getElementById('workHours').value || 4;
+        let deliveryDate = document.getElementById('deliveryDateManual').value;
+        let orderData = {
+            id: currentEditingOrder ? currentEditingOrder.id : Date.now(),
+            orderId: currentEditingOrder ? currentEditingOrder.orderId : getNewOrderId(),
+            customer, phone:document.getElementById('ordPhone').value, cloth:document.getElementById('ordCloth').value,
+            fabric, wage, total, paid:advance, due:due<0?0:due, measurements, images:tempImages,
+            workHours, deliveryDate, status: currentEditingOrder ? currentEditingOrder.status : 'pending',
+            orderDate: new Date().toISOString().slice(0,10), date:new Date().toISOString()
+        };
+        if(currentEditingOrder){ let idx=db.orders.findIndex(o=>o.id===currentEditingOrder.id); if(idx!==-1) db.orders[idx]=orderData; }
+        else db.orders.unshift(orderData);
+        saveAll(); renderOrdersList(); updateDashboardAndSuggestion(); closeModals();
+        alert(`✅ অর্ডার #${orderData.orderId} সফলভাবে যুক্ত হয়েছে`);
+        document.querySelector('.nav-item[data-page="tailors"]').click();
+    };
+    function closeModals() { document.querySelectorAll('.modal').forEach(m=>m.classList.remove('active')); }
+    document.querySelector('.closeDetailModal')?.addEventListener('click',()=>document.getElementById('orderDetailModal').classList.remove('active'));
+    document.getElementById('quickOrderBtn')?.addEventListener('click',()=>openOrderForm());
+    document.getElementById('newOrderBtn')?.addEventListener('click',()=>openOrderForm());
+    document.getElementById('addTailorBtn')?.addEventListener('click',()=>document.getElementById('tailorModal').classList.add('active'));
+    document.getElementById('saveTailorBtn')?.addEventListener('click',()=>{ let name=document.getElementById('tailorName').value; if(name){ db.tailors.push({id:Date.now(), name, phone:document.getElementById('tailorPhone').value, salary:document.getElementById('tailorSalary').value}); saveAll(); renderTailors(); closeModals(); alert('দর্জি যোগ হয়েছে'); } });
+    document.getElementById('addExpenseBtn')?.addEventListener('click',()=>document.getElementById('expenseModal').classList.add('active'));
+    document.getElementById('saveExpenseBtn')?.addEventListener('click',()=>{ let desc=document.getElementById('expenseDesc').value, amount=+document.getElementById('expenseAmount').value, date=document.getElementById('expenseDate').value||new Date().toISOString().slice(0,10); if(desc&&amount){ db.expenses.push({id:Date.now(), desc, amount, date}); saveAll(); renderExpenses(); closeModals(); } });
+    document.getElementById('backupBtn')?.addEventListener('click',()=>{ let data=JSON.stringify(db); let blob=new Blob([data],{type:'application/json'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gold_backup.json'; a.click(); document.getElementById('backupStatus').innerHTML='✅ ব্যাকআপ সফল হয়েছে'; });
+    document.getElementById('restoreBtn')?.addEventListener('click',()=>{ let inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=e=>{ let file=e.target.files[0]; let reader=new FileReader(); reader.onload=ev=>{ let data=JSON.parse(ev.target.result); db.orders=data.orders||[]; db.tailors=data.tailors||[]; db.expenses=data.expenses||[]; db.settings=data.settings||{dailyCapacity:8,stockDaysPrior:0}; db.nextOrderId=data.nextOrderId||1; saveAll(); location.reload(); }; reader.readAsText(file); }; inp.click(); });
+    document.getElementById('clearAllBtn')?.addEventListener('click',()=>{ if(confirm('সব রিসেট?')){ localStorage.clear(); location.reload(); } });
+    document.getElementById('exportOrdersBtn')?.addEventListener('click',()=>{ let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(db.orders)],{type:'application/json'})); a.download='orders.json'; a.click(); });
+    document.getElementById('saveSettingsBtn')?.addEventListener('click',()=>{ db.settings={shopName:document.getElementById('shopName').value, ownerName:document.getElementById('ownerName').value, shopPhone:document.getElementById('shopPhone').value, shopAddress:document.getElementById('shopAddress').value, dailyCapacity:+document.getElementById('dailyCapacity').value||8, stockDaysPrior:+document.getElementById('stockDaysPrior').value||0}; saveAll(); alert('সেভ হয়েছে'); updateDashboardAndSuggestion(); });
+    document.getElementById('refreshTopBtn')?.addEventListener('click',()=>{ renderOrdersList(); updateDashboardAndSuggestion(); });
+    document.getElementById('backupTopBtn')?.addEventListener('click',()=>document.getElementById('backupBtn').click());
+    document.querySelectorAll('.nav-item').forEach(btn=>{ btn.addEventListener('click',()=>{ let page=btn.getAttribute('data-page'); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(`page-${page}`).classList.add('active'); document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); btn.classList.add('active'); }); });
+    document.querySelectorAll('.closeModalBtn, #closeOrderModal').forEach(btn=>{ if(btn) btn.addEventListener('click',closeModals); });
+    renderOrdersList(); renderTailors(); renderExpenses(); updateDashboardAndSuggestion();
+    if(db.settings.shopName) document.getElementById('shopName').value=db.settings.shopName;
+    if(db.settings.dailyCapacity) document.getElementById('dailyCapacity').value=db.settings.dailyCapacity;
+    if(db.settings.stockDaysPrior) document.getElementById('stockDaysPrior').value=db.settings.stockDaysPrior;
+</script>
+</body>
+</html>
